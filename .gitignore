@@ -12,3 +12,6 @@ ansible-venv/
 # Игнорируем IDE
 .idea/
 .vscode/
+
+.envrc
+*.pub

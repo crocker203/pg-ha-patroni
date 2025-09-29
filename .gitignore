@@ -1,0 +1,14 @@
+# Игнорируем артефакты Vagrant
+.vagrant/
+*.log
+
+# Игнорируем Ansible временные файлы
+*.retry
+
+# Игнорируем виртуальные окружения
+venv/
+ansible-venv/
+
+# Игнорируем IDE
+.idea/
+.vscode/

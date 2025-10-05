@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
   Dir.mkdir(IMAGES_DIR) unless Dir.exist?(IMAGES_DIR)
 
   # Helper для конфигурации VM
-  def setup_node(node, ip:, memory:, cpus:, pub_key:)
+  def setup_node(node, ip:, memory:, cpus:, pub_key:, images_dir: "vagrant_images")
     node.vm.network "private_network", ip: ip, auto_config: true
   
     node.vm.provider :libvirt do |lv|

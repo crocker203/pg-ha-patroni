@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 ENVRC_FILE="$ROOT_DIR/.envrc"
 
+echo ""
 echo "⚙️ Настройка автоматической активации окружения через direnv..."
 
 # Проверяем, что ansible-venv существует
@@ -30,6 +31,8 @@ echo "Теперь выполните команду:"
 echo "  direnv allow"
 echo ""
 echo "После этого окружение будет автоматически активироваться при заходе в проект."
+echo "Ошибка вида pg-ha-patroni/.envrc is blocked. Run `direnv allow` to approve its content нормальна при инициализации проекта"
+echo ""
 
 #cat > "$ENVRC_FILE" <<'EOF'
 # Активируем виртуальное окружение ansible-venv

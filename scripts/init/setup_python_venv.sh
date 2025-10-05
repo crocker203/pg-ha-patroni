@@ -30,6 +30,7 @@ if ! grep -q 'PG_HA_PATRONI_HOME' "$ACTIVATE_FILE"; then
 fi
 echo
 echo "⚠️  Для работы с проектом активируйте виртуальное окружение вручную: source ansible-venv/bin/activate"
-echo "⚠️  Переменные PG_HA_PATRONI_HOME, ANSIBLE_CONFIG будут инициализированы автоматически при активации."
+echo "⚠️  Переменные PG_HA_PATRONI_HOME, ANSIBLE_CONFIG будут инициализированы автоматически при активации виртуального окружения"
+echo "⚠️  Без инициализации переменных PG_HA_PATRONI_HOME, ANSIBLE_CONFIG проект работать не будет"
 echo
 echo "✅ Виртуальное окружение создано и зависимости установлены"

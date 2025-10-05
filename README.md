@@ -34,16 +34,18 @@ cd pg-ha-patroni
 scripts/fix_executable_rights.sh           # один раз, чтобы все скрипты стали исполняемыми и зафиксировались в Git (ОПЦИОНАЛЬНО, по умолчанию файлы УЖЕ ИСПОЛНЯЕМЫЕ при клонировании)
 make init                                  # создание venv, установка ansible, генерация .envrc
 direnv allow                               # разрешение direnv выполнять .envrc (выполнить в корневой директории проекта)
-make setup [inventory_node_name]           # (опционально) установка системных зависимостей
+make setup                                 # (опционально) установка системных зависимостей
 make up [inventory_node_name]              # поднять кластер
 make ansible [inventory_node_name]         # проверить доступность нод
 ```
 
 ⚠️ После клона проекта .envrc ещё не существует.  
 Сначала выполните make init, чтобы его создать.  
-После этого появится ошибка вида "`direnv: error /path/to/pg-ha-patroni/.envrc is blocked. Run 'direnv allow' to approve its content`  
-связано с тем что direnv блокирует `.envrc` по умолчанию - ЭТО НОРМАЛЬНО  
-Затем один раз выполните direnv allow. После этого direnv будет автоматически активировать виртуальное окружение и устанавливать переменные окружения при входе в папку проекта.
+После этого появится ошибка вида  
+`direnv: error /path/to/pg-ha-patroni/.envrc is blocked. Run 'direnv allow' to approve its content`  
+Ошибка связана с тем что direnv блокирует `.envrc` по умолчанию - ЭТО НОРМАЛЬНО  
+Затем один раз выполните direnv allow в корневой директории проекта.  
+После этого direnv будет автоматически активировать виртуальное окружение и устанавливать переменные окружения при входе в директорию проекта.
 
 ---
 
@@ -80,7 +82,7 @@ scripts/fix_executable_rights.sh
 eval "$(direnv hook bash)"
 ```
 
-После `make init` активируйте `.envrc`:
+После `make init` активируйте `.envrc` (выполнить в корневой директории проекта):
 
 ```bash
 direnv allow

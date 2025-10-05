@@ -39,10 +39,10 @@ make up [inventory_node_name]              # поднять кластер
 make ansible [inventory_node_name]         # проверить доступность нод
 ```
 
-⚠️ После клона проекта .envrc ещё не существует. 
-Сначала выполните make init, чтобы его создать.
-После этого появится ошибка вида "`direnv: error /path/to/pg-ha-patroni/.envrc is blocked. Run 'direnv allow' to approve its content`
-связано с тем что direnv блокирует `.envrc` по умолчанию - ЭТО НОРМАЛЬНО
+⚠️ После клона проекта .envrc ещё не существует.  
+Сначала выполните make init, чтобы его создать.  
+После этого появится ошибка вида "`direnv: error /path/to/pg-ha-patroni/.envrc is blocked. Run 'direnv allow' to approve its content`  
+связано с тем что direnv блокирует `.envrc` по умолчанию - ЭТО НОРМАЛЬНО  
 Затем один раз выполните direnv allow. После этого direnv будет автоматически активировать виртуальное окружение и устанавливать переменные окружения при входе в папку проекта.
 
 ---

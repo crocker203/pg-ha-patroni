@@ -1,4 +1,4 @@
-# pg-ha-patroni
+После клона проекта .envrc ещё не существует. Сначала выполните make init, чтобы его создать, затем один раз выполните direnv allow. После этого direnv будет автоматически активировать виртуальное окружение и устанавливать переменные окружения при входе в папку проекта.# pg-ha-patroni
 
 Инфраструктура для кластера **PostgreSQL** с **Patroni** и **Consul**, развёртываемая через **Ansible** и **Vagrant/libvirt**.
 
@@ -39,9 +39,10 @@ make up [inventory_node_name]              # поднять кластер
 make ansible [inventory_node_name]         # проверить доступность нод
 ```
 
-> ⚠️ После клона проекта direnv блокирует `.envrc` по умолчанию.  
-> Если пропустить `direnv allow`, будет ошибка:  
-> `direnv: error /path/to/pg-ha-patroni/.envrc is blocked. Run 'direnv allow' to approve its content`
+> После клона проекта .envrc ещё не существует. Сначала выполните make init, чтобы его создать.
+> После этого появится ошибка вида "`direnv: error /path/to/pg-ha-patroni/.envrc is blocked. Run 'direnv allow' to approve its content` ЭТО НОРМАЛЬНО
+> Связано с тем что direnv блокирует `.envrc` по умолчанию.
+> Затем один раз выполните direnv allow. После этого direnv будет автоматически активировать виртуальное окружение и устанавливать переменные окружения при входе в папку проекта.
 
 ---
 

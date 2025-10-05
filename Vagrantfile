@@ -33,7 +33,6 @@ Vagrant.configure("2") do |config|
       ip: ENV.fetch("CONSUL_IP", "192.168.121.10"),
       memory: ENV.fetch("CONSUL_MEM", 512).to_i,
       cpus: ENV.fetch("CONSUL_CPU", 1).to_i,
-      images_dir: IMAGES_DIR,
       pub_key: PUB_KEY_PATH
     )
   end
@@ -46,7 +45,6 @@ Vagrant.configure("2") do |config|
       ip: ENV.fetch("DB1_IP", "192.168.121.11"),
       memory: ENV.fetch("DB_MEM", 1024).to_i,
       cpus: ENV.fetch("DB_CPU", 1).to_i,
-      images_dir: IMAGES_DIR,
       pub_key: PUB_KEY_PATH
     )
   end
@@ -59,7 +57,6 @@ Vagrant.configure("2") do |config|
       ip: ENV.fetch("DB2_IP", "192.168.121.12"),
       memory: ENV.fetch("DB_MEM", 1024).to_i,
       cpus: ENV.fetch("DB_CPU", 1).to_i,
-      images_dir: IMAGES_DIR,
       pub_key: PUB_KEY_PATH
     )
   end

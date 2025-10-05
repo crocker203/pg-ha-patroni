@@ -6,7 +6,7 @@ ENVRC_FILE="$ROOT_DIR/.envrc"
 
 cat > "$ENVRC_FILE" <<'EOF'
 # Динамическое определение корня проекта при каждом заходе в папку
-export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export ANSIBLE_CONFIG="$PG_HA_PATRONI_HOME/ansible.cfg"
 
 # Активируем виртуальное окружение ansible-venv

@@ -32,7 +32,7 @@ sudo apt install -y git vagrant python3 python3-pip direnv libvirt-clients libvi
 ```bash
 git clone git@github.com:you/pg-ha-patroni.git
 cd pg-ha-patroni
-make setup [inventory_node_name]      # (ОПЦИОНАЛЬНО) установка системных зависимостей
+make setup                            # (ОПЦИОНАЛЬНО) установка системных зависимостей
 direnv allow                          # разрешение direnv выполнять .envrc
 make init                             # создание venv, установка ansible, генерация .envrc
 make up [inventory_node_name]         # поднять кластер

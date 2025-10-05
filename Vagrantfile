@@ -8,19 +8,23 @@ Vagrant.configure("2") do |config|
   Dir.mkdir(IMAGES_DIR) unless Dir.exist?(IMAGES_DIR)
 
   # Helper для конфигурации VM
-  def setup_node(node, ip:, memory:, cpus:, pub_key:, images_dir: "vagrant_images")
+  def setup_node(node, ip:, memory:, cpus:, pub_key:)
     node.vm.network "private_network", ip: ip, auto_config: true
   
     node.vm.provider :libvirt do |lv|
       lv.memory = memory
       lv.cpus = cpus
   
-      # Используем storage pool vagrant_images
+      # Используем пул default
       lv.storage :file,
         size: '10G',
         name: "#{node.vm.hostname}.img",
-        pool: "vagrant_images"
+        pool: "default"
     end
+  
+    node.vm.provision "shell", path: File.join(ENV['PG_HA_PATRONI_HOME'], "scripts/provision.sh"), args: [pub_key]
+  end
+
   
     node.vm.provision "shell", path: File.join(ENV['PG_HA_PATRONI_HOME'], "scripts/provision.sh"), args: [pub_key]
   end

@@ -2,26 +2,19 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-INIT_DIR="$ROOT_DIR/scripts/init"
-IMAGES_DIR="$ROOT_DIR/vagrant_images"
 
-echo "🚀 Запуск полной инициализации проекта pg-ha-patroni..."
+echo "🚀 Инициализация проекта..."
 
-# 1️⃣ Исправляем права
-bash "$ROOT_DIR/scripts/fix_permissions.sh"
+# 1️⃣ Устанавливаем git pre-commit hook
+"$ROOT_DIR/scripts/init/setup_git_hooks.sh"
 
-# 2️⃣ Проверяем/создаём директорию для образов Vagrant
-if [ ! -d "$IMAGES_DIR" ]; then
-  mkdir -p "$IMAGES_DIR"
-  echo "📁 Создана папка $IMAGES_DIR для образов VM"
-else
-  echo "📁 Папка $IMAGES_DIR уже существует"
-fi
+# 2️⃣ Генерируем .envrc для direnv
+"$ROOT_DIR/scripts/init/setup_envrc.sh"
 
-# 3️⃣ Настраиваем .envrc
-bash "$INIT_DIR/setup_envrc.sh"
+# 3️⃣ Создаём и настраиваем Python virtualenv для ansible
+"$ROOT_DIR/scripts/init/setup_python_venv.sh"
 
-# 4️⃣ Создаём виртуальное окружение Ansible (если нет)
-bash "$INIT_DIR/setup_python_venv.sh"
+# 4️⃣ Создаём каталог для образов Vagrant (если не существует)
+mkdir -p "$ROOT_DIR/vagrant_images"
 
-echo "✅ Инициализация проекта успешно завершена"
+echo "✅ Инициализация завершена успешно!"

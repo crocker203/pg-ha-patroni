@@ -25,10 +25,6 @@ Vagrant.configure("2") do |config|
     node.vm.provision "shell", path: File.join(ENV['PG_HA_PATRONI_HOME'], "scripts/provision.sh"), args: [pub_key]
   end
 
-  
-    node.vm.provision "shell", path: File.join(ENV['PG_HA_PATRONI_HOME'], "scripts/provision.sh"), args: [pub_key]
-  end
-
   # VM1: Consul
   config.vm.define "consul" do |consul|
     consul.vm.hostname = "consul"

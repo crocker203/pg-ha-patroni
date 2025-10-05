@@ -19,14 +19,16 @@ ACTIVATE_FILE="$ROOT_DIR/ansible-venv/bin/activate"
 BLOCK=$(cat <<'EOF'
 
 # Динамическое определение корня проекта и пути до конфига ansible при каждом заходе в папку
-export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../" && pwd)"
 export ANSIBLE_CONFIG="$PG_HA_PATRONI_HOME/ansible.cfg"
 EOF
 )
 
 if ! grep -q 'PG_HA_PATRONI_HOME' "$ACTIVATE_FILE"; then
     echo "$BLOCK" >> "$ACTIVATE_FILE"
-    echo "Добавлен блок PG_HA_PATRONI_HOME в $ACTIVATE_FILE"
+    echo "Добавлен блок инициализации переменных [PG_HA_PATRONI_HOME, ANSIBLE_CONFIG] в $ACTIVATE_FILE"
 fi
 
+echo "⚠️ Для работы с проектом активируйте виртуальное окружение вручную: source ansible-venv/bin/activate"
+echo "⚠️ Переменные PG_HA_PATRONI_HOME, ANSIBLE_CONFIG будут инициализированы автоматически при активации."
 echo "✅ Виртуальное окружение создано и зависимости установлены"

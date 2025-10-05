@@ -1,0 +1,6 @@
+---
+- name: Установка и запуск на сервере Consul
+  hosts: consul
+  become: yes
+  roles:
+    - consul_server

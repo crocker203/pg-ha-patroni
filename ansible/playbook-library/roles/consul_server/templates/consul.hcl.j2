@@ -1,0 +1,6 @@
+data_dir = "{{ consul_data_dir }}"
+server = {{ consul_server | lower }}
+bootstrap_expect = {{ consul_bootstrap_expect }}
+ui = {{ consul_ui | lower }}
+bind_addr = "{{ consul_bind_addr }}"
+advertise_addr = "{{ consul_advertise_addr }}"

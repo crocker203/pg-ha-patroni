@@ -1,57 +1,61 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/oracle8"
-
-  # ⚠️ Разрешаем Vagrant использовать дефолтный ключ при старте
   config.ssh.insert_key = true
+
+  # Пути
+  PUB_KEY_PATH = File.expand_path("~/.ssh/id_ed25519.pub")
+  IMAGES_DIR = "vagrant_images"  # относительный путь
+  Dir.mkdir(IMAGES_DIR) unless Dir.exist?(IMAGES_DIR)
+
+  # Helper для конфигурации VM
+  def setup_node(node, ip:, memory:, cpus:, images_dir:, pub_key:)
+    node.vm.network "private_network", ip: ip, auto_config: true
+
+    node.vm.provider :libvirt do |lv|
+      lv.memory = memory
+      lv.cpus = cpus
+      lv.storage :file, size: '10G', path: "#{images_dir}/#{node.vm.hostname}.img"
+    end
+
+    node.vm.provision "shell", path: "scripts/provision.sh", args: [pub_key]
+  end
 
   # VM1: Consul
   config.vm.define "consul" do |consul|
     consul.vm.hostname = "consul"
-    consul.vm.network "private_network", ip: "192.168.121.10"
-    consul.vm.provider :libvirt do |lv|
-      lv.memory = 512
-      lv.cpus = 1
-    end
-    consul.vm.provision "file", source: "~/.ssh/id_ed25519.pub", destination: "/home/vagrant/id_ed25519.pub"
-    consul.vm.provision "shell", inline: <<-SHELL
-      mkdir -p /home/vagrant/.ssh
-      cat /home/vagrant/id_ed25519.pub >> /home/vagrant/.ssh/authorized_keys
-      chown -R vagrant:vagrant /home/vagrant/.ssh
-      chmod 600 /home/vagrant/.ssh/authorized_keys
-    SHELL
+    setup_node(
+      consul,
+      ip: ENV.fetch("CONSUL_IP", "192.168.121.10"),
+      memory: ENV.fetch("CONSUL_MEM", 512).to_i,
+      cpus: ENV.fetch("CONSUL_CPU", 1).to_i,
+      images_dir: IMAGES_DIR,
+      pub_key: PUB_KEY_PATH
+    )
   end
 
   # VM2: PostgreSQL #1
   config.vm.define "db1" do |db1|
     db1.vm.hostname = "db1"
-    db1.vm.network "private_network", ip: "192.168.121.11"
-    db1.vm.provider :libvirt do |lv|
-      lv.memory = 1024
-      lv.cpus = 1
-    end
-    db1.vm.provision "file", source: "~/.ssh/id_ed25519.pub", destination: "/home/vagrant/id_ed25519.pub"
-    db1.vm.provision "shell", inline: <<-SHELL
-      mkdir -p /home/vagrant/.ssh
-      cat /home/vagrant/id_ed25519.pub >> /home/vagrant/.ssh/authorized_keys
-      chown -R vagrant:vagrant /home/vagrant/.ssh
-      chmod 600 /home/vagrant/.ssh/authorized_keys
-    SHELL
+    setup_node(
+      db1,
+      ip: ENV.fetch("DB1_IP", "192.168.121.11"),
+      memory: ENV.fetch("DB_MEM", 1024).to_i,
+      cpus: ENV.fetch("DB_CPU", 1).to_i,
+      images_dir: IMAGES_DIR,
+      pub_key: PUB_KEY_PATH
+    )
   end
 
   # VM3: PostgreSQL #2
   config.vm.define "db2" do |db2|
     db2.vm.hostname = "db2"
-    db2.vm.network "private_network", ip: "192.168.121.12"
-    db2.vm.provider :libvirt do |lv|
-      lv.memory = 1024
-      lv.cpus = 1
-    end
-    db2.vm.provision "file", source: "~/.ssh/id_ed25519.pub", destination: "/home/vagrant/id_ed25519.pub"
-    db2.vm.provision "shell", inline: <<-SHELL
-      mkdir -p /home/vagrant/.ssh
-      cat /home/vagrant/id_ed25519.pub >> /home/vagrant/.ssh/authorized_keys
-      chown -R vagrant:vagrant /home/vagrant/.ssh
-      chmod 600 /home/vagrant/.ssh/authorized_keys
-    SHELL
+    setup_node(
+      db2,
+      ip: ENV.fetch("DB2_IP", "192.168.121.12"),
+      memory: ENV.fetch("DB_MEM", 1024).to_i,
+      cpus: ENV.fetch("DB_CPU", 1).to_i,
+      images_dir: IMAGES_DIR,
+      pub_key: PUB_KEY_PATH
+    )
   end
 end

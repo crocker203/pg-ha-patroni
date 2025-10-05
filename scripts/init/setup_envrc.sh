@@ -20,19 +20,10 @@ cat > "$ENVRC_FILE" <<'EOF'
 export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Активируем Python virtualenv через абсолютный путь
-layout python "$PG_HA_PATRONI_HOME/ansible-venv"
+source "$PG_HA_PATRONI_HOME/ansible-venv/bin/activate"
 
 # <<< end direnv configuration <<<
 EOF
-
-echo "✅ Файл .envrc создан по пути: $ENVRC_FILE"
-echo ""
-echo "Теперь выполните команду:"
-echo "  direnv allow"
-echo ""
-echo "После этого окружение будет автоматически активироваться при заходе в проект."
-echo "Ошибка вида pg-ha-patroni/.envrc is blocked. Run `direnv allow` to approve its content нормальна при инициализации проекта"
-echo ""
 
 #cat > "$ENVRC_FILE" <<'EOF'
 # Активируем виртуальное окружение ansible-venv
@@ -41,4 +32,12 @@ echo ""
 #fi
 #EOF
 
-#echo "✅ .envrc создан для direnv"
+echo "✅ Файл .envrc создан по пути: $ENVRC_FILE"
+echo ""
+echo "Теперь выполните команду:"
+echo "  direnv allow"
+echo ""
+echo "После этого окружение будет автоматически активироваться при заходе в проект."
+echo "Ошибка вида 'pg-ha-patroni/.envrc is blocked. Run `direnv allow` to approve its content' нормальна при инициализации проекта"
+echo "✅ .envrc создан для direnv"
+echo ""

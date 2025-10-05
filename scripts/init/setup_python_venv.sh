@@ -21,6 +21,16 @@ BLOCK=$(cat <<'EOF'
 # Динамическое определение корня проекта и пути до конфига ansible при каждом заходе в папку
 export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../" && pwd)"
 export ANSIBLE_CONFIG="$PG_HA_PATRONI_HOME/ansible.cfg"
+
+# Подключаем shell-hooks для унификации deactivate
+if [ -f "$PG_HA_PATRONI_HOME/scripts/shell_hooks.sh" ]; then
+    # Сохраняем оригинальную deactivate, если есть
+    if declare -F deactivate >/dev/null; then
+        deactivate_original() { command deactivate "$@"; }
+    fi
+    source "$PG_HA_PATRONI_HOME/scripts/shell_hooks.sh"
+fi
+
 EOF
 )
 

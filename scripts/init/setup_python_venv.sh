@@ -18,10 +18,9 @@ pip install -r "$ROOT_DIR/requirements-ansible.txt"
 ACTIVATE_FILE="$ROOT_DIR/ansible-venv/bin/activate"
 BLOCK=$(cat <<'EOF'
 
-# Устанавливаем переменную PG_HA_PATRONI_HOME, если она не задана
-if [ -z "${PG_HA_PATRONI_HOME:-}" ]; then
-    export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/" && pwd)"
-fi
+# Динамическое определение корня проекта и пути до конфига ansible при каждом заходе в папку
+export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export ANSIBLE_CONFIG="$PG_HA_PATRONI_HOME/ansible.cfg"
 EOF
 )
 

@@ -34,7 +34,7 @@ cd pg-ha-patroni
 scripts/fix_executable_rights.sh           # один раз, чтобы все скрипты стали исполняемыми и зафиксировались в Git (ОПЦИОНАЛЬНО, по умолчанию файлы УЖЕ ИСПОЛНЯЕМЫЕ при клонировании)
 make init                                  # создание venv, установка ansible, генерация .envrc
 direnv allow                               # разрешение direnv выполнять .envrc (выполнить в корневой директории проекта)
-make setup                                 # (опционально) установка системных зависимостей
+make setup                                 # (ОПЦИОНАЛЬНО) установка системных зависимостей
 make up [inventory_node_name]              # поднять кластер
 make ansible [inventory_node_name]         # проверить доступность нод
 ```

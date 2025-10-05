@@ -26,7 +26,7 @@ export ANSIBLE_CONFIG=$PG_HA_PATRONI_HOME/ansible.cfg
 source $PG_HA_PATRONI_HOME/ansible-venv/bin/activate
 ```
 
-2. Разрешите direnv исполнять `.envrc`:
+2. Разрешите direnv исполнять `.envrc` (выполнить в корневой директории проекта):
 
 ```bash
 direnv allow

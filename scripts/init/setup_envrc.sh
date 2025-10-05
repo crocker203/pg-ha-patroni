@@ -22,6 +22,11 @@ export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Активируем Python virtualenv через абсолютный путь
 source "$PG_HA_PATRONI_HOME/ansible-venv/bin/activate"
 
+# Подключаем общий shell hook, чтобы функция deactivate была доступна и при direnv
+if [ -f "$PG_HA_PATRONI_HOME/scripts/shell_hooks.sh" ]; then
+    source "$PG_HA_PATRONI_HOME/scripts/shell_hooks.sh"
+fi
+
 # <<< end direnv configuration <<<
 EOF
 

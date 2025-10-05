@@ -30,22 +30,15 @@ init:
 	# Запуск скрипта инициализации
 	@bash scripts/init/init.sh
 
-# -----------------------------
-# Libvirt storage pool для Vagrant
-# -----------------------------
-.PHONY: init-pool
-init-pool:
-	@echo "⚙️ Создаём libvirt storage pool 'vagrant_images'..."
-	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) scripts/init/setup_libvirt_pool.sh
 
 # -----------------------------
 # Управление Vagrant с аргументами
 # -----------------------------
 .PHONY: up halt destroy db1 db2 consul
 
-up: init-pool
+up:
 	@echo "📦 Поднимаем кластер..."
-	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) $(VAGRANT_BIN) up $(filter-out $@,$(MAKECMDGOALS))
+	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) vagrant up consul db1 db2
 
 halt:
 	@echo "⏸️ Останавливаем кластер..."

@@ -15,12 +15,12 @@ pip install --upgrade pip
 pip install -r "$ROOT_DIR/requirements-ansible.txt"
 
 # Добавляем установку PG_HA_PATRONI_HOME в venv/bin/activate, если ещё не добавлена
-ACTIVATE_FILE="$ROOT_DIR/venv/bin/activate"
+ACTIVATE_FILE="$ROOT_DIR/ansible-venv/bin/activate"
 BLOCK=$(cat <<'EOF'
 
 # Устанавливаем переменную PG_HA_PATRONI_HOME, если она не задана
 if [ -z "${PG_HA_PATRONI_HOME:-}" ]; then
-    export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)"
+    export PG_HA_PATRONI_HOME="$(cd "$(dirname "${BASH_SOURCE[0]}")/" && pwd)"
 fi
 EOF
 )

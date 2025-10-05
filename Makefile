@@ -38,7 +38,7 @@ init:
 
 up:
 	@echo "📦 Поднимаем кластер..."
-	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) vagrant up consul db1 db2
+	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) vagrant up $(filter-out $@,$(MAKECMDGOALS))
 
 halt:
 	@echo "⏸️ Останавливаем кластер..."

@@ -28,7 +28,8 @@ if ! grep -q 'PG_HA_PATRONI_HOME' "$ACTIVATE_FILE"; then
     echo "$BLOCK" >> "$ACTIVATE_FILE"
     echo "Добавлен блок инициализации переменных [PG_HA_PATRONI_HOME, ANSIBLE_CONFIG] в $ACTIVATE_FILE"
 fi
-
-echo "⚠️ Для работы с проектом активируйте виртуальное окружение вручную: source ansible-venv/bin/activate"
-echo "⚠️ Переменные PG_HA_PATRONI_HOME, ANSIBLE_CONFIG будут инициализированы автоматически при активации."
+echo
+echo "⚠️  Для работы с проектом активируйте виртуальное окружение вручную: source ansible-venv/bin/activate"
+echo "⚠️  Переменные PG_HA_PATRONI_HOME, ANSIBLE_CONFIG будут инициализированы автоматически при активации."
+echo
 echo "✅ Виртуальное окружение создано и зависимости установлены"

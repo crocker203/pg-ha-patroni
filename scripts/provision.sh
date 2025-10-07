@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PUB_KEY="$1"
+PUB_KEY_PATH="${1:-/tmp/pg_ha_patroni_id_ed25519.pub}"
 
-# Создаём .ssh и добавляем ключ
-mkdir -p /home/vagrant/.ssh
-cat "$PUB_KEY" >> /home/vagrant/.ssh/authorized_keys
-chown -R vagrant:vagrant /home/vagrant/.ssh
-chmod 700 /home/vagrant/.ssh
-chmod 600 /home/vagrant/.ssh/authorized_keys
+# Добавляем публичный ключ, если он передан и существует
+if [[ -f "$PUB_KEY_PATH" ]]; then
+    echo "🔑 Настраиваем SSH доступ..."
+    mkdir -p /home/vagrant/.ssh
+    cat "$PUB_KEY_PATH" >> /home/vagrant/.ssh/authorized_keys
+    chmod 700 /home/vagrant/.ssh
+    chmod 600 /home/vagrant/.ssh/authorized_keys
+    chown -R vagrant:vagrant /home/vagrant/.ssh
+else
+    echo "⚠️ Публичный ключ не найден: $PUB_KEY_PATH (пропускаем настройку SSH)"
+fi
 
 # Установка nano (опционально)
 sudo dnf install -y nano

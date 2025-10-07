@@ -38,7 +38,12 @@ init:
 
 up:
 	@echo "📦 Поднимаем кластер..."
+	@if virsh list --all | grep -q "pg-ha-patroni_$(filter-out $@,$(MAKECMDGOALS))"; then \
+		echo "⚠️  VM уже существует в libvirt. Удаляем старый домен..."; \
+		virsh undefine pg-ha-patroni_$(filter-out $@,$(MAKECMDGOALS)) --remove-all-storage || true; \
+	fi
 	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) vagrant up $(filter-out $@,$(MAKECMDGOALS))
+
 
 halt:
 	@echo "⏸️ Останавливаем кластер..."

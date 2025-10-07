@@ -3,7 +3,10 @@
 VAGRANT_BIN := vagrant
 ANSIBLE_PLAYBOOK := ansible-playbook
 PG_HA_PATRONI_HOME := $(shell pwd)
-SSH_KEY_PATH := $(PG_HA_PATRONI_HOME)/.ssh/id_ed25519
+
+# Ключи
+SSH_PRIVATE_KEY := $(PG_HA_PATRONI_HOME)/.ssh/id_ed25519
+SSH_PUBLIC_KEY  := $(PG_HA_PATRONI_HOME)/.ssh/id_ed25519.pub
 
 .PHONY: setup
 setup:
@@ -17,17 +20,17 @@ init:
 	@command -v vagrant >/dev/null 2>&1 || (echo "⚠️ Vagrant не установлен" && exit 1)
 	@command -v git >/dev/null 2>&1 || (echo "⚠️ Git не установлен" && exit 1)
 
-	# Генерация SSH ключа, если отсутствует
-	@if [ ! -f "$(SSH_KEY_PATH)" ]; then \
-		echo "🔑 Генерируем SSH ключ для Vagrant/Ansible..."; \
+	# Генерация ключей, если отсутствуют
+	@if [ ! -f "$(SSH_PRIVATE_KEY)" ]; then \
+		echo "🔑 Генерируем SSH ключи для Vagrant/Ansible..."; \
 		mkdir -p $(PG_HA_PATRONI_HOME)/.ssh; \
-		ssh-keygen -t ed25519 -f $(SSH_KEY_PATH) -N "" -q; \
+		ssh-keygen -t ed25519 -f $(SSH_PRIVATE_KEY) -N "" -q; \
 	fi
 
-	# Устанавливаем переменную окружения для Ansible
-	@echo "export ANSIBLE_PRIVATE_KEY_FILE=$(SSH_KEY_PATH)" > $(PG_HA_PATRONI_HOME)/.envrc
+	# Устанавливаем переменные окружения для Ansible
+	@echo "export ANSIBLE_PRIVATE_KEY_FILE=$(SSH_PRIVATE_KEY)" > $(PG_HA_PATRONI_HOME)/.envrc
 	@echo "export PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME)" >> $(PG_HA_PATRONI_HOME)/.envrc
-	@echo "✅ SSH ключ и окружение готовы. Выполните 'direnv allow'"
+	@echo "✅ SSH ключи и окружение готовы. Выполните 'direnv allow'"
 
 	# Выполняем скрипт инициализации проекта
 	@bash scripts/init/init.sh
@@ -36,11 +39,7 @@ init:
 
 up:
 	@echo "📦 Поднимаем кластер..."
-	@if virsh list --all | grep -q "pg-ha-patroni_$(filter-out $@,$(MAKECMDGOALS))"; then \
-		echo "⚠️  VM уже существует. Удаляем старый домен..."; \
-		virsh undefine pg-ha-patroni_$(filter-out $@,$(MAKECMDGOALS)) --remove-all-storage || true; \
-	fi
-	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) SSH_KEY_PATH=$(SSH_KEY_PATH) $(VAGRANT_BIN) up $(filter-out $@,$(MAKECMDGOALS))
+	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) SSH_PRIVATE_KEY=$(SSH_PRIVATE_KEY) SSH_PUBLIC_KEY=$(SSH_PUBLIC_KEY) $(VAGRANT_BIN) up $(filter-out $@,$(MAKECMDGOALS))
 
 halt:
 	@echo "⏸️ Останавливаем кластер..."
@@ -58,40 +57,27 @@ ssh:
 # -----------------------------
 # Ansible
 # -----------------------------
-# -----------------------------
-# Ansible: проверка подключения / выполнение плейбука
-# -----------------------------
-.PHONY: ansible
-
 ANSIBLE_INVENTORY := $(PG_HA_PATRONI_HOME)/ansible/learn-inventory/inventory.ini
 ANSIBLE_USER := vagrant
-ANSIBLE_PRIVATE_KEY := $(SSH_KEY_PATH)
 
+.PHONY: ansible
 ansible:
 	@TARGET=$${1:-all}; \
 	echo "🔎 Проверка подключения к хосту ansible $$TARGET ..."; \
-	ansible $$TARGET -i $(ANSIBLE_INVENTORY) -u $(ANSIBLE_USER) --private-key=$(ANSIBLE_PRIVATE_KEY) -m ping
-
-
+	ansible $$TARGET -i $(ANSIBLE_INVENTORY) -u $(ANSIBLE_USER) --private-key=$(SSH_PRIVATE_KEY) -m ping
 
 .PHONY: playbook
-
 playbook:
-	@# Берём первый аргумент как playbook
 	@PLAYBOOK=$(filter-out $@,$(MAKECMDGOALS) | head -n1); \
 	if [ -z "$$PLAYBOOK" ]; then \
 		echo "❌ Укажите playbook после make playbook"; \
 		exit 1; \
 	fi; \
-	# Остальные аргументы — это хосты
 	TARGETS=$(filter-out $$PLAYBOOK,$(filter-out $@,$(MAKECMDGOALS))); \
 	if [ -z "$$TARGETS" ]; then TARGETS=all; fi; \
 	echo "🎯 Запуск playbook $$PLAYBOOK на хостах: $$TARGETS"; \
-	ANSIBLE_PRIVATE_KEY_FILE=$(SSH_KEY_PATH) \
-		ansible-playbook $$PLAYBOOK -i $(PG_HA_PATRONI_HOME)/ansible/learn-inventory/inventory.ini \
-		-u vagrant --private-key=$(SSH_KEY_PATH) -l "$$TARGETS"
+	ansible-playbook $$PLAYBOOK -i $(ANSIBLE_INVENTORY) -u $(ANSIBLE_USER) --private-key=$(SSH_PRIVATE_KEY) -l "$$TARGETS"
 
-# Чтобы make не ругался на аргументы (db1, consul и т.д.)
+# Заглушки, чтобы make не ругался на аргументы
 db1 db2 consul:
 	@:
-

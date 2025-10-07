@@ -62,7 +62,8 @@ ANSIBLE_USER := vagrant
 
 .PHONY: ansible
 ansible:
-	@TARGET=$${1:-all}; \
+	@TARGET=$(filter-out $@,$(MAKECMDGOALS)); \
+	if [ -z "$$TARGET" ]; then TARGET=all; fi; \
 	echo "🔎 Проверка подключения к хосту ansible $$TARGET ..."; \
 	ansible $$TARGET -i $(ANSIBLE_INVENTORY) -u $(ANSIBLE_USER) --private-key=$(SSH_PRIVATE_KEY) -m ping
 

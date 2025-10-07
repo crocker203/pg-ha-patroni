@@ -1,81 +1,64 @@
 # Makefile для pg-ha-patroni
 
-# -----------------------------
-# Переменные
-# -----------------------------
 VAGRANT_BIN := vagrant
 ANSIBLE_PLAYBOOK := ansible-playbook
-PG_HA_PATRONI_HOME := $(shell pwd)   # Используем корень проекта для всех путей
+PG_HA_PATRONI_HOME := $(shell pwd)
+SSH_KEY_PATH := $(PG_HA_PATRONI_HOME)/.ssh/id_ed25519
 
-# -----------------------------
-# Системная подготовка
-# -----------------------------
 .PHONY: setup
 setup:
 	@echo "🔧 Установка системных пакетов..."
 	@./scripts/init/setup_system.sh || echo "⚠️ setup_system.sh не найден, пропускаем"
 
-# -----------------------------
-# Инициализация проекта
-# -----------------------------
 .PHONY: init
 init:
 	@echo "🚀 Инициализация проекта..."
+	@command -v direnv >/dev/null 2>&1 || (echo "⚠️ direnv не установлен" && exit 1)
+	@command -v vagrant >/dev/null 2>&1 || (echo "⚠️ Vagrant не установлен" && exit 1)
+	@command -v git >/dev/null 2>&1 || (echo "⚠️ Git не установлен" && exit 1)
 
-	# Проверка зависимостей
-	@command -v direnv >/dev/null 2>&1 || (echo "⚠️  direnv не установлен. Установите через 'sudo apt install direnv'" && exit 1)
-	@command -v vagrant >/dev/null 2>&1 || (echo "⚠️  Vagrant не установлен. Скачайте с https://www.vagrantup.com/downloads/" && exit 1)
-	@command -v git >/dev/null 2>&1 || (echo "⚠️  Git не установлен. Установите git и повторите." && exit 1)
+	# Генерация SSH ключа, если отсутствует
+	@if [ ! -f "$(SSH_KEY_PATH)" ]; then \
+		echo "🔑 Генерируем SSH ключ для Vagrant/Ansible..."; \
+		mkdir -p $(PG_HA_PATRONI_HOME)/.ssh; \
+		ssh-keygen -t ed25519 -f $(SSH_KEY_PATH) -N "" -q; \
+	fi
 
-	# Запуск скрипта инициализации
+	# Устанавливаем переменную окружения для Ansible
+	@echo "export ANSIBLE_PRIVATE_KEY_FILE=$(SSH_KEY_PATH)" > $(PG_HA_PATRONI_HOME)/.envrc
+	@echo "export PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME)" >> $(PG_HA_PATRONI_HOME)/.envrc
+	@echo "✅ SSH ключ и окружение готовы. Выполните 'direnv allow'"
+
+	# Выполняем скрипт инициализации проекта
 	@bash scripts/init/init.sh
 
-
-# -----------------------------
-# Управление Vagrant с аргументами
-# -----------------------------
 .PHONY: up halt destroy db1 db2 consul
 
 up:
 	@echo "📦 Поднимаем кластер..."
 	@if virsh list --all | grep -q "pg-ha-patroni_$(filter-out $@,$(MAKECMDGOALS))"; then \
-		echo "⚠️  VM уже существует в libvirt. Удаляем старый домен..."; \
+		echo "⚠️  VM уже существует. Удаляем старый домен..."; \
 		virsh undefine pg-ha-patroni_$(filter-out $@,$(MAKECMDGOALS)) --remove-all-storage || true; \
 	fi
-	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) vagrant up $(filter-out $@,$(MAKECMDGOALS))
-
+	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) SSH_KEY_PATH=$(SSH_KEY_PATH) $(VAGRANT_BIN) up $(filter-out $@,$(MAKECMDGOALS))
 
 halt:
 	@echo "⏸️ Останавливаем кластер..."
-	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) $(VAGRANT_BIN) halt $(filter-out $@,$(MAKECMDGOALS))
+	@$(VAGRANT_BIN) halt $(filter-out $@,$(MAKECMDGOALS))
 
 destroy:
 	@echo "💣 Удаляем кластер..."
-	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) $(VAGRANT_BIN) destroy -f $(filter-out $@,$(MAKECMDGOALS))
+	@$(VAGRANT_BIN) destroy -f $(filter-out $@,$(MAKECMDGOALS))
 
-# Пустые цели для VM, чтобы Make не ругался на неизвестные цели
 db1 db2 consul:
 	@:
 
-# -----------------------------
-# SSH доступ к нодам с аргументами
-# -----------------------------
 .PHONY: ssh
 ssh:
-	@echo "🔑 Подключаемся к VM через Vagrant SSH..."
-	@PG_HA_PATRONI_HOME=$(PG_HA_PATRONI_HOME) $(VAGRANT_BIN) ssh $(filter-out $@,$(MAKECMDGOALS))
+	@echo "🔑 Подключаемся к VM через SSH..."
+	@$(VAGRANT_BIN) ssh $(filter-out $@,$(MAKECMDGOALS))
 
-# -----------------------------
-# Ansible с выбором группы/хоста
-# -----------------------------
 .PHONY: ansible
 ansible:
 	@echo "🎯 Проверка доступности нод через Ansible..."
-	@$(ANSIBLE_PLAYBOOK) -i ansible/learn-inventory/inventory.ini --list-hosts $(filter-out $@,$(MAKECMDGOALS))
-
-# -----------------------------
-# Пустые цели для поддержки аргументов ansible
-# -----------------------------
-.PHONY: db
-db:
-	@:
+	@ANSIBLE_PRIVATE_KEY_FILE=$(SSH_KEY_PATH) $(ANSIBLE_PLAYBOOK) -i ansible/learn-inventory/inventory.ini --list-hosts $(filter-out $@,$(MAKECMDGOALS))

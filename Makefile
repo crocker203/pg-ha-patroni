@@ -50,15 +50,48 @@ destroy:
 	@echo "💣 Удаляем кластер..."
 	@$(VAGRANT_BIN) destroy -f $(filter-out $@,$(MAKECMDGOALS))
 
-db1 db2 consul:
-	@:
-
 .PHONY: ssh
 ssh:
 	@echo "🔑 Подключаемся к VM через SSH..."
 	@$(VAGRANT_BIN) ssh $(filter-out $@,$(MAKECMDGOALS))
 
+# -----------------------------
+# Ansible
+# -----------------------------
+# -----------------------------
+# Ansible: проверка подключения / выполнение плейбука
+# -----------------------------
 .PHONY: ansible
+
+ANSIBLE_INVENTORY := $(PG_HA_PATRONI_HOME)/ansible/learn-inventory/inventory.ini
+ANSIBLE_USER := vagrant
+ANSIBLE_PRIVATE_KEY := $(SSH_KEY_PATH)
+
 ansible:
-	@echo "🎯 Проверка доступности нод через Ansible..."
-	@ANSIBLE_PRIVATE_KEY_FILE=$(SSH_KEY_PATH) $(ANSIBLE_PLAYBOOK) -i ansible/learn-inventory/inventory.ini --list-hosts $(filter-out $@,$(MAKECMDGOALS))
+	@TARGET=$${1:-all}; \
+	echo "🔎 Проверка подключения к хосту ansible $$TARGET ..."; \
+	ansible $$TARGET -i $(ANSIBLE_INVENTORY) -u $(ANSIBLE_USER) --private-key=$(ANSIBLE_PRIVATE_KEY) -m ping
+
+
+
+.PHONY: playbook
+
+playbook:
+	@# Берём первый аргумент как playbook
+	@PLAYBOOK=$(filter-out $@,$(MAKECMDGOALS) | head -n1); \
+	if [ -z "$$PLAYBOOK" ]; then \
+		echo "❌ Укажите playbook после make playbook"; \
+		exit 1; \
+	fi; \
+	# Остальные аргументы — это хосты
+	TARGETS=$(filter-out $$PLAYBOOK,$(filter-out $@,$(MAKECMDGOALS))); \
+	if [ -z "$$TARGETS" ]; then TARGETS=all; fi; \
+	echo "🎯 Запуск playbook $$PLAYBOOK на хостах: $$TARGETS"; \
+	ANSIBLE_PRIVATE_KEY_FILE=$(SSH_KEY_PATH) \
+		ansible-playbook $$PLAYBOOK -i $(PG_HA_PATRONI_HOME)/ansible/learn-inventory/inventory.ini \
+		-u vagrant --private-key=$(SSH_KEY_PATH) -l "$$TARGETS"
+
+# Чтобы make не ругался на аргументы (db1, consul и т.д.)
+db1 db2 consul:
+	@:
+

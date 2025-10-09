@@ -1,95 +1,110 @@
 ---
-- name: Установить зависимости
-  package:
-    name: "{{ consul_dependencies }}"
-    state: present
-  become: yes
+- name: Установка и настройка Consul
+  block:
+    - name: Установить зависимости
+      package:
+        name: "{{ consul_dependencies }}"
+        state: present
+      become: yes
 
-- name: Создать группу для Consul
-  group:
-    name: "{{ consul_group }}"
-    state: present
-  become: yes
+    - name: Создать группу для Consul
+      group:
+        name: "{{ consul_group }}"
+        state: present
+      become: yes
 
-- name: Создать пользователя для Consul
-  user:
-    name: "{{ consul_user }}"
-    group: "{{ consul_group }}"
-    system: yes
-    shell: /sbin/nologin
-  become: yes
+    - name: Создать пользователя для Consul
+      user:
+        name: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        system: yes
+        shell: /sbin/nologin
+      become: yes
 
-- name: Создать директорию данных Consul
-  file:
-    path: "{{ consul_data_dir }}"
-    state: directory
-    owner: "{{ consul_user }}"
-    group: "{{ consul_group }}"
-    mode: "0755"
-  become: yes
+    - name: Создать директорию данных Consul
+      file:
+        path: "{{ consul_data_dir }}"
+        state: directory
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: "0755"
+      become: yes
 
-- name: Создать директорию конфигурации Consul
-  file:
-    path: "{{ consul_config_dir }}"
-    state: directory
-    owner: "{{ consul_user }}"
-    group: "{{ consul_group }}"
-    mode: "0755"
-  become: yes
+    - name: Создать директорию конфигурации Consul
+      file:
+        path: "{{ consul_config_dir }}"
+        state: directory
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: "0755"
+      become: yes
 
-- name: Скачать Consul
-  get_url:
-    url: "{{ consul_download_url }}"
-    dest: "/tmp/consul.zip"
-    mode: '0644'
-  become: yes
+    - name: Скачать Consul
+      get_url:
+        url: "{{ consul_download_url }}"
+        dest: "/tmp/consul.zip"
+        mode: '0644'
+      become: yes
 
-- name: Распаковать Consul
-  unarchive:
-    src: "/tmp/consul.zip"
-    dest: "/usr/local/bin/"
-    remote_src: yes
-    mode: '0755'
-  become: yes
+    - name: Распаковать Consul
+      unarchive:
+        src: "/tmp/consul.zip"
+        dest: "/usr/local/bin/"
+        remote_src: yes
+        mode: '0755'
+      become: yes
 
-- name: Создать конфиг Consul
-  template:
-    src: consul.hcl.j2
-    dest: "{{ consul_config_dir }}/consul.hcl"
-    owner: "{{ consul_user }}"
-    group: "{{ consul_group }}"
-    mode: "0644"
-  notify:
-    - restart consul
-  become: yes
+    - name: Создать конфиг Consul
+      template:
+        src: consul.hcl.j2
+        dest: "{{ consul_config_dir }}/consul.hcl"
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: "0644"
+      notify:
+        - restart consul
+      become: yes
 
-- name: Создать systemd unit для Consul
-  copy:
-    dest: /etc/systemd/system/consul.service
-    content: |
-      [Unit]
-      Description=Consul Agent
-      Wants=network-online.target
-      After=network-online.target
+    - name: Создать systemd unit для Consul
+      copy:
+        dest: /etc/systemd/system/consul.service
+        content: |
+          [Unit]
+          Description=Consul Agent
+          Wants=network-online.target
+          After=network-online.target
 
-      [Service]
-      User={{ consul_user }}
-      Group={{ consul_group }}
-      ExecStart={{ consul_bin_path }} agent -config-dir={{ consul_config_dir }}
-      ExecReload=/bin/kill -HUP $MAINPID
-      KillMode=process
-      Restart=on-failure
-      LimitNOFILE=65536
+          [Service]
+          User={{ consul_user }}
+          Group={{ consul_group }}
+          ExecStart={{ consul_bin_path }} agent -config-dir={{ consul_config_dir }}
+          ExecReload=/bin/kill -HUP $MAINPID
+          KillMode=process
+          Restart=on-failure
+          LimitNOFILE=65536
 
-      [Install]
-      WantedBy=multi-user.target
-  notify:
-    - restart consul
-  become: yes
+          [Install]
+          WantedBy=multi-user.target
+      notify:
+        - restart consul
+      become: yes
 
-- name: Enable and start Consul
-  systemd:
-    name: consul
-    enabled: yes
-    state: started
-  become: yes
+    - name: Enable and start Consul
+      systemd:
+        name: consul
+        enabled: yes
+        state: started
+      become: yes
+
+  tags: consul_setup
+
+- name: Configure Consul firewall
+  block:
+    - name: Open Consul ports
+      shell: |
+        firewall-cmd --add-port=8500/tcp --add-port=8300/tcp --add-port=8301/tcp --add-port=8302/tcp --add-port=8600/tcp --permanent
+
+    - name: Reload firewall rules
+      shell: firewall-cmd --reload
+
+  when: ansible_os_family == "RedHat"

@@ -1,5 +1,5 @@
 nodes:
-  - name: bomzh
+  - name: consul1
     group: consul
     memory: 512
     cpus: 1

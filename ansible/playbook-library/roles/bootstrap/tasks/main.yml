@@ -1,0 +1,30 @@
+---
+- name: Установка системных пакетов и утилит
+  block:
+    - name: Установка Python и системных утилит
+      package:
+        name:
+          - python3
+          - python3-pip
+          - jq
+          - telnet
+          - nano
+        state: present
+
+    - name: Установка EPEL репозитория
+      package:
+        name: epel-release
+        state: present
+
+    - name: Установка htop из EPEL
+      package:
+        name: htop
+        state: present
+
+
+- name: Создание симлинка python -> python3 для совместимости
+  file:
+    src: /usr/bin/python3
+    dest: /usr/bin/python
+    state: link
+  when: ansible_facts['os_family'] == "RedHat"

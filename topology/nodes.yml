@@ -1,0 +1,15 @@
+nodes:
+  - name: bomzh
+    group: consul
+    memory: 512
+    cpus: 1
+
+  - name: db1
+    group: db
+    memory: 1024
+    cpus: 1
+
+  - name: db2
+    group: db
+    memory: 1024
+    cpus: 1

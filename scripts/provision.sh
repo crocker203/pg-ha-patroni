@@ -16,10 +16,10 @@ else
 fi
 
 # Установка nano (опционально)
-sudo dnf install -y nano
+#sudo dnf install -y nano
 
 # Установка Python3, pip
-sudo dnf install -y python3 python3-pip
+#sudo dnf install -y python3 python3-pip
 
 # Симлинк для совместимости с Ansible
 if [ ! -f /usr/bin/python ] && [ -f /usr/bin/python3 ]; then

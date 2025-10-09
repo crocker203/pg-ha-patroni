@@ -1,3 +1,5 @@
+require 'yaml'
+
 Vagrant.configure("2") do |config|
   config.vm.box = "generic/oracle8"
   config.ssh.insert_key = false
@@ -5,56 +7,47 @@ Vagrant.configure("2") do |config|
   ROOT_DIR = ENV['PG_HA_PATRONI_HOME'] || Dir.pwd
   SSH_PRIVATE_KEY = ENV['SSH_PRIVATE_KEY'] || File.join(ROOT_DIR, ".ssh/id_ed25519")
   SSH_PUBLIC_KEY  = ENV['SSH_PUBLIC_KEY']  || File.join(ROOT_DIR, ".ssh/id_ed25519.pub")
+  INVENTORY_PATH  = File.join(ROOT_DIR, "ansible/learn-inventory/inventory.ini")
+  TOPOLOGY_FILE   = File.join(ROOT_DIR, "topology/nodes.yml")
+  UPDATE_SCRIPT   = File.join(ROOT_DIR, "scripts/update_inventory.sh")
 
-  unless File.exist?(SSH_PRIVATE_KEY) && File.exist?(SSH_PUBLIC_KEY)
-    abort("❌ SSH ключи не найдены: #{SSH_PRIVATE_KEY}, #{SSH_PUBLIC_KEY}. Выполните 'make init'.")
-  end
+  abort("❌ SSH ключи не найдены") unless File.exist?(SSH_PRIVATE_KEY) && File.exist?(SSH_PUBLIC_KEY)
+  abort("❌ Скрипт update_inventory.sh не найден") unless File.exist?(UPDATE_SCRIPT)
 
-  # Копируем публичный ключ в VM
-  config.vm.provision "file",
-    source: SSH_PUBLIC_KEY,
-    destination: "/tmp/pg_ha_patroni_id_ed25519.pub"
+  nodes_def = YAML.load_file(TOPOLOGY_FILE)["nodes"]
 
-  # Helper для VM
-  def setup_node(node, ip:, memory:, cpus:)
-    node.vm.network "private_network", ip: ip, auto_config: true
+  nodes_def.each do |node_def|
+    config.vm.define node_def["name"] do |node|
+      node.vm.hostname = node_def["name"]
 
-    node.vm.provider :libvirt do |lv|
-      lv.memory = memory
-      lv.cpus = cpus
-      lv.storage :file, size: '10G', name: "#{node.vm.hostname}.img", pool: "default"
+      # Статический IP если указан, иначе DHCP
+      if node_def["ip"] && !node_def["ip"].empty?
+        node.vm.network "private_network", ip: node_def["ip"], auto_config: true
+      else
+        node.vm.network "private_network", type: "dhcp", auto_config: true
+      end
+
+      node.vm.provider :libvirt do |lv|
+        lv.memory = node_def["memory"] || 1024
+        lv.cpus   = node_def["cpus"] || 1
+        lv.storage :file, size: '10G', name: "#{node.vm.hostname}.img", pool: "default"
+      end
+
+      node.vm.provision "file",
+        source: SSH_PUBLIC_KEY,
+        destination: "/tmp/pg_ha_patroni_id_ed25519.pub"
+
+      node.vm.provision "shell",
+        path: File.join(ROOT_DIR, "scripts/provision.sh"),
+        args: ["/tmp/pg_ha_patroni_id_ed25519.pub"]
     end
-
-    # Запускаем скрипт provision.sh
-    node.vm.provision "shell",
-      path: File.join(ENV['PG_HA_PATRONI_HOME'], "scripts/provision.sh"),
-      args: ["/tmp/pg_ha_patroni_id_ed25519.pub"]
   end
 
-  config.vm.define "consul" do |consul|
-    consul.vm.hostname = "consul"
-    setup_node(consul,
-      ip: ENV.fetch("CONSUL_IP", "192.168.121.10"),
-      memory: ENV.fetch("CONSUL_MEM", 512).to_i,
-      cpus: ENV.fetch("CONSUL_CPU", 1).to_i
-    )
-  end
-
-  config.vm.define "db1" do |db1|
-    db1.vm.hostname = "db1"
-    setup_node(db1,
-      ip: ENV.fetch("DB1_IP", "192.168.121.11"),
-      memory: ENV.fetch("DB_MEM", 1024).to_i,
-      cpus: ENV.fetch("DB_CPU", 1).to_i
-    )
-  end
-
-  config.vm.define "db2" do |db2|
-    db2.vm.hostname = "db2"
-    setup_node(db2,
-      ip: ENV.fetch("DB2_IP", "192.168.121.12"),
-      memory: ENV.fetch("DB_MEM", 1024).to_i,
-      cpus: ENV.fetch("DB_CPU", 1).to_i
-    )
+  # 🧩 Триггер после команды `vagrant up`
+  config.trigger.after :up, type: :command do |trigger|
+    trigger.name = "Обновление Ansible inventory (после всех поднятых нод)"
+    trigger.run = {
+      inline: "#{UPDATE_SCRIPT} #{INVENTORY_PATH}"
+    }
   end
 end

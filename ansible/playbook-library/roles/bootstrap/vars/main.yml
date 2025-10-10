@@ -1,0 +1,3 @@
+---
+device: /dev/vdb
+fs_type: ext4

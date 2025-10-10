@@ -1,4 +1,42 @@
 ---
+- name: Setup /dev/vdb for data storage
+  block:
+    - name: Ensure mount point exists
+      file:
+        path: "{{ mount_point }}"
+        state: directory
+        owner: "{{ ansible_user | default('vagrant') }}"
+        group: "{{ ansible_user | default('vagrant') }}"
+        mode: '0755'
+
+    - name: Check if device has a filesystem
+      command: blkid {{ device }}
+      register: blkid_output
+      ignore_errors: true
+
+    - name: Format device if no filesystem exists
+      filesystem:
+        fstype: "{{ fs_type }}"
+        dev: "{{ device }}"
+      when: blkid_output.rc != 0
+
+    - name: Mount device
+      mount:
+        path: "{{ mount_point }}"
+        src: "{{ device }}"
+        fstype: "{{ fs_type }}"
+        state: mounted
+        opts: defaults
+
+    - name: Ensure device is in fstab
+      mount:
+        path: "{{ mount_point }}"
+        src: "{{ device }}"
+        fstype: "{{ fs_type }}"
+        state: present
+        opts: defaults
+
+
 - name: Установка системных пакетов и утилит
   block:
     - name: Установка Python и системных утилит

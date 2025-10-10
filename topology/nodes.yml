@@ -1,15 +1,15 @@
 nodes:
-  - name: consul1
+  - name: consul-001a
     group: consul
     memory: 512
     cpus: 1
 
-  - name: db1
+  - name: pg-001a
     group: db
     memory: 1024
     cpus: 1
 
-  - name: db2
+  - name: pg-001b
     group: db
     memory: 1024
     cpus: 1
